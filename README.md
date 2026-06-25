@@ -81,7 +81,6 @@ ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
 ```bash
 nano ~/.bash_profile
 ```
-
 Adicione ao final do arquivo:
 
 ```bash
@@ -89,6 +88,11 @@ if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
   startx
 fi
 ```
+>**Caso o arquivo esteja vazio**, cheque também:
+>```bash
+>~/.profile
+>~/.bash_login
+>```
 
 ---
 
