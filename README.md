@@ -94,7 +94,7 @@ fi
 
 ## 6. Forçar openbox como gerenciador de janelas
 
-Por padrão, o `startx` usa LXDE como fallback. Substituímos isso pelo openbox, que é muito mais leve:
+Por padrão, o `startx` usa o LXDE, que cria todo o ambiente de desktop, como fallback. Substituímos isso pelo openbox, um gestor de janelas cru, que é muito mais leve:
 
 ```bash
 echo "exec openbox-session" > ~/.xinitrc
