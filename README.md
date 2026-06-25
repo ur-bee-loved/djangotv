@@ -168,5 +168,5 @@ Após a reinicialização, a página de monitoramento deverá abrir automaticame
 | Desktop ainda carrega | `systemctl get-default` deve retornar `multi-user.target`; lightdm deve estar mascarado |
 | lxsession assumindo o startx | `~/.xinitrc` deve conter `exec openbox-session` e `/etc/X11/xinit/xinitrc` deve estar renomeado |
 | Chromium trava com erro de GPU | Confirme que as flags `--disable-gpu`, `--disable-software-rasterizer`, `--disable-skia-graphite` e `--use-gl=swiftshader` estão presentes no script |
-| Modal não é fechado | Recalibre as coordenadas do xdotool com `scrot` — as coordenadas padrão (`916 179`) são para resolução 1920x1080 |
+| Pop-up não é fechado | Recalibre as coordenadas do xdotool com `scrot` — as coordenadas padrão (`916 179`) são para resolução 1920x1080 |
 | Erro de autenticação via SSH | `export XAUTHORITY=~/.Xauthority` deve estar no script |
