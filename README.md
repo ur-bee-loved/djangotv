@@ -1,87 +1,172 @@
 # djangotv
-Repositório simples cujo objetivo é facilitar a configuração e a utilização das placas raspberry pi conectadas às televisões da empresa.
+
+Repositório simples cujo objetivo é facilitar a configuração e a utilização das placas Raspberry Pi conectadas às televisões da empresa.
 Todos os arquivos referenciados aqui estarão presentes, também, no corpo do repositório.
 
-Pré-requisitos mínimos:
-  HW: Raspberry pi model 2 B
-  OS: Raspberry Pi OS Lite
-  Acesso à placa via SSH e conexão com a internet, que não explicarei aqui.
+---
 
-Como boas práticas, recomendo que o sistema operacional recém gravado na raspberry pi seja atualizado antes do início do processo. Para fazer isso, executamos:
-  sudo apt update && sudo apt upgrade -y
+## Pré-requisitos
 
-Pacotes requeridos: 
-  xinit
-  openbox
-  chromium
-  curl
-  xdotool
-  scrot 
-  Para instalá-los, execute o comando:
-    sudo apt install xinit openbox chromium curl xdotool scrot -y
+| | |
+|---|---|
+| **Hardware** | Raspberry Pi Model 2B ou superior |
+| **Sistema Operacional** | Raspberry Pi OS Lite (64-bit) |
+| **Acesso** | SSH habilitado e conexão com a internet |
 
-Para melhor utilizarmos os recursos da placa, que tem suas limitações no que tange o processamento, não utilizaremos a GUI do sistema operacional, isso é, configuraremos para que os processos sejam processados diretamente pelo terminal. Podemos fazer isso de algumas maneiras, mas a mais simples é usar o gestor de configurações nativo do sistema:
+---
 
-  sudo raspi-config
-  Com esse comando, abrirá-se um menu auxiliar. Deve se ir em 1 "System Options" -> S5 "Boot" -> B1 "Console Text Console"
-  O sistema perguntará se queremos reiniciar e, sim, queremos. Isso desabilita o Desktop gerado pela rasp.
-  No caso de, após o reboot, ainda assim iniciar-se o desktop deixo aqui algumas medidas auxiliáres para desabilitá-lo:
-    Desabilitar o lightdm (responsável por manejar o login na rasp):
-      sudo systemctl disable lightdm
-      sudo systemctl mask lightdm
-    Forçar a configuração padrão do sistema como console sem o menu do próprio sistema:
-      sudo systemctl set-default multi-user.target
-    Reiniciar os daemons (processos em segundo plano) da placa:
-      sudo systemctl daemon-reload
+## 1. Atualizar o sistema
 
-Mesmo que tenhamos, anteriormente, desabilitado o Desktop e o gestor de login, ainda é preciso passar por essa barreira ou o sistema não nos permitirá abrir os processos necessários para prosseguir. Pra isso, criaremos um arquivo de configuração para o _daemon_ gestor de login:
-  sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
-  sudo nano /etc/systemd/system/getty@tty1.service.d/autologin.conf
-    Dentro desse novo arquivo, agora sendo editado, escreva as seguintes informações:
-      [Service]
-      ExecStart=
-      ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
+Antes de qualquer coisa, atualize os pacotes do sistema:
 
-Ainda utilizando a mesma ferramenta editora de texto, o _nano_, editaremos o perfil de inicialização do sistema, isto é, mandaremos o sistema iniciar a interface gráfica na tela anexada via porta HDMI no assim que iniciar:
-  nano ~/.bash_profile
-  dentro desse arquivo, escreva:
-    if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    startx
-    fi
+```bash
+sudo apt update && sudo apt upgrade -y
+```
 
-Para fins de praticidade, não explicarei em detalhes os daemons e ferramentas aqui utilizadas daqui a diante.
+---
 
-Forcemos o xinitrc a utilizar o openbox (que recém instalamos) ao invés do seu fallback _LXDE_
-  echo "exec openbox-session" > ~/.xinitrc
-  sudo mv /etc/X11/xinit/xinitrc /etc/X11/xinit/xinitrc.bak
+## 2. Instalar pacotes necessários
 
-Uma vez isso feito, configuremos o próprio openbox:
-  mkdir -p ~/.config/openbox
-  nano ~/.config/openbox/autostart
-  Dentro desse, escreva:
-    xset s off
-    xset s noblank
-    xset -dpms
-    /home/pi/djangotv.sh &
+```bash
+sudo apt install --no-install-recommends \
+  xinit openbox chromium curl xdotool scrot -y
+```
 
-  Para tornar o arquivo .sh executável:
-    chmod +x ~/.config/openbox/autostart
+---
 
-  Agora, por fim, criemos o script que fará a mágica acontecer. Da mesma forma que anteriormente, cirará-se um arquivo de texto contendo as ordens de serviço e o mesmo deverá ser salvo e tornado em executável:
-    nano ~/djangotv.sh
-      chmod +x ~/djangotv.sh
-  Os conteúdos do script estarão anexados no corpo do repositório.
+## 3. Desabilitar a interface gráfica
 
-  Com isso, finalizemos o processo com:
-    sudo reboot
-  E por fim, na reinicalização, esperamos que a página dos monitores seja devidamente aberta na têvê:
+Para melhor aproveitar os recursos limitados da placa, configuramos o sistema para rodar sem desktop. A forma mais simples é pelo gerenciador nativo:
 
-  Algumas notas finais:
-    Em caso de dúvida sobre o funcionamento da aplicação nano, tenha em mente que:
-    pode-se usar ctrl + shift + c para copiar pedaços de texto
-    ctrl + shift + v para colar pedaços de texto
-    ctrl x para fechar arquivos
-    Caso tenha editado o arquivo e gostaria de salvar, confirme com S ou Y a depender do idioma do sistema e por fim Enter, querendo dizer que quer manter o arquivo       com o mesmo nome.
-  
+```bash
+sudo raspi-config
+```
 
-  
+Navegue até: **1 System Options → S5 Boot → B1 Console Text Console**
+
+O sistema perguntará se deseja reiniciar — confirme.
+
+> **Caso o desktop ainda inicie após o reboot**, execute os comandos abaixo para desabilitá-lo manualmente:
+>
+> ```bash
+> sudo systemctl disable lightdm
+> sudo systemctl mask lightdm
+> sudo systemctl set-default multi-user.target
+> sudo systemctl daemon-reload
+> ```
+
+---
+
+## 4. Configurar login automático
+
+Crie o arquivo de configuração para login automático no terminal:
+
+```bash
+sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
+sudo nano /etc/systemd/system/getty@tty1.service.d/autologin.conf
+```
+
+Cole o seguinte conteúdo:
+
+```ini
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
+```
+
+---
+
+## 5. Iniciar X automaticamente no login
+
+```bash
+nano ~/.bash_profile
+```
+
+Adicione ao final do arquivo:
+
+```bash
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+  startx
+fi
+```
+
+---
+
+## 6. Forçar openbox como gerenciador de janelas
+
+Por padrão, o `startx` usa LXDE como fallback. Substituímos isso pelo openbox, que é muito mais leve:
+
+```bash
+echo "exec openbox-session" > ~/.xinitrc
+sudo mv /etc/X11/xinit/xinitrc /etc/X11/xinit/xinitrc.bak
+```
+
+---
+
+## 7. Configurar o autostart do openbox
+
+```bash
+mkdir -p ~/.config/openbox
+nano ~/.config/openbox/autostart
+```
+
+Cole o seguinte conteúdo:
+
+```bash
+xset s off
+xset s noblank
+xset -dpms
+/home/pi/djangotv.sh &
+```
+
+Torne o arquivo executável:
+
+```bash
+chmod +x ~/.config/openbox/autostart
+```
+
+---
+
+## 8. Criar o script principal
+
+```bash
+nano ~/djangotv.sh
+chmod +x ~/djangotv.sh
+```
+
+O conteúdo do script está no arquivo `djangotv.sh` anexado no repositório.
+
+---
+
+## 9. Reiniciar
+
+```bash
+sudo reboot
+```
+
+Após a reinicialização, a página de monitoramento deverá abrir automaticamente na TV.
+
+---
+
+## Referência rápida — nano
+
+| Ação | Atalho |
+|---|---|
+| Copiar | `Ctrl + Shift + C` |
+| Colar | `Ctrl + Shift + V` |
+| Fechar arquivo | `Ctrl + X` |
+| Salvar ao fechar | Confirme com `S` ou `Y` + `Enter` |
+
+---
+
+## Resolução de problemas
+
+| Sintoma | Verificação |
+|---|---|
+| Tela preta após boot | `ps aux \| grep Xorg` — X não iniciou |
+| X rodando mas sem Chromium | `cat ~/.xsession-errors` |
+| Desktop ainda carrega | `systemctl get-default` deve retornar `multi-user.target`; lightdm deve estar mascarado |
+| lxsession assumindo o startx | `~/.xinitrc` deve conter `exec openbox-session` e `/etc/X11/xinit/xinitrc` deve estar renomeado |
+| Chromium trava com erro de GPU | Confirme que as flags `--disable-gpu`, `--disable-software-rasterizer`, `--disable-skia-graphite` e `--use-gl=swiftshader` estão presentes no script |
+| Modal não é fechado | Recalibre as coordenadas do xdotool com `scrot` — as coordenadas padrão (`916 179`) são para resolução 1920x1080 |
+| Erro de autenticação via SSH | `export XAUTHORITY=~/.Xauthority` deve estar no script |
