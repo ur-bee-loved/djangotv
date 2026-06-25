@@ -5,11 +5,11 @@ Todos os arquivos referenciados aqui estarão presentes, também, no corpo do re
 
 ---
 
-## Pré-requisitos
+## Pré-requisitos mínimos
 
 | | |
 |---|---|
-| **Hardware** | Raspberry Pi Model 2B ou superior |
+| **Hardware** | Raspberry Pi Model 2B|
 | **Sistema Operacional** | Raspberry Pi OS Lite (64-bit) |
 | **Acesso** | SSH habilitado e conexão com a internet |
 
